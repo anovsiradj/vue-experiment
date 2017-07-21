@@ -1,0 +1,119 @@
+<!--
+refferences
+https://github.com/vuejs/vue/issues/812
+http://jsbin.com/yorosaneko/1/edit?html,js,console,output
+https://gist.github.com/icai/ae4f5a7f529a34aeb79166825cf11f81
+https://forum.vuejs.org/t/solved-how-can-you-update-the-v-model-from-a-custom-directive-in-vue-2/2275/3
+https://stackoverflow.com/a/1204957/3036312 (-_-)
+-->
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Vue@~2: jQuery UI Datepicker</title>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+	<!-- style -->
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css"/>
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"/>
+	<!-- script -->
+	<script src="//cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
+	<script>Vue.config.devtools = false; Vue.config.productionTip = false;</script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
+</head>
+<body>
+	<h1 class="container mt-3 mb-4"><script>document.write(document.title)</script></h1>
+
+	<div id="app" class="container">
+		<div class="row mb-3">
+			<div class="col">
+				simple use
+				<input v-jqueryui-datepicker/>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col">
+				<h6>DATEPICKER #1</h6>
+				<p>sync - common use (format must same)</p>
+				<p>
+					<input v-model="$data.mydate1" v-jqueryui-datepicker="{dateFormat: 'yy-mm-dd'}"/>
+					<span v-text="$data.mydate1"></span>
+				</p>
+				<button v-on:click="$set($data, 'mydate1', '1996-05-22')">set date manually (inline)</button>
+				<button v-on:click="do_setdate1">set date manually (function)</button>
+			</div>
+
+			<div class="col">
+				<h6>DATEPICKER #2</h6>
+				<p>using alt-field + alt-format</p>
+				<p>
+					(readonly - real value, that send to server)<br/>
+					<input v-model="$data.mydate2" id="the-real-mydate2" placeholder="supposed to be hidden" readonly/>
+					<span v-text="$data.mydate2"></span>
+				</p>
+				<p>
+					<input v-jqueryui-datepicker="{dateFormat: 'dd/mm/yy', altField: '#the-real-mydate2', altFormat: 'yy-mm-dd'}" value="30/12/2000"/>
+				</p>
+				<p>
+					<input v-jqueryui-datepicker="{dateFormat: 'dd MM yy', altField: '#the-real-mydate2', altFormat: 'yy-mm-dd'}"/>
+				</p>
+			</div>
+
+		</div>
+	</div>
+
+<script>
+// https://developer.mozilla.org/en-US/docs/Web/API/Event/Event
+// To force Vue to update model for $data.* manually
+function native_event_triggerer(elm, type, opts) {
+	var ev = new Event(type, opts);
+	elm.dispatchEvent(ev);
+	delete ev;
+}
+
+// so far, argument only accept object, and limited to string/integer/boolean
+Vue.directive('jqueryui-datepicker', {
+	bind: function(el, bd, vn) {
+		$(el).datepicker(bd.value).datepicker('option', 'onSelect', function(str_date, instance) {
+			native_event_triggerer(this, 'input', {bubble: true});
+		});
+
+		var alt = $(el).datepicker('option', 'altField').trim();
+		if (alt !== '') {
+			$(el).datepicker('option', 'onSelect', function() {
+				$(alt).each(function() {
+					native_event_triggerer(this, 'input', {bubble: true});
+				});
+			});
+		}
+
+		// if (bd.value.altField) {
+		//   $(bd.value.altField).on('input', function() {
+		//     this.dispatchEvent(manual_ev);
+		//   });
+		// }
+	}
+});
+
+var myapp = new Vue({
+	el: '#app',
+	data: {
+		mydate1: '2000-12-30',
+		mydate2: null
+	},
+	methods: {
+		do_setdate1: function() {
+			// inreactive
+			// this.$data,mydate1 = '2017-05-22';
+			// how to make it reactive ?
+
+			// reactive
+			this.$set(this.$data, 'mydate1', '2017-05-22');
+		}
+	}
+});
+</script>
+</body>
+</html>
+
