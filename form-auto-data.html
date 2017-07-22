@@ -1,0 +1,88 @@
+<!-- Sen Jul  3 00:53:13 WIB 2017 -->
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8"/>
+	<title>Vue Dynamic <code>$data</code> Based on Form Control Elements</title>
+	<style>ul li { cursor: pointer; }</style>
+</head>
+<body>
+
+<h1><script>document.write(document.title)</script></h1>
+
+<button onclick="show_form(null)">new data</button>
+<ul>
+	<li data-qwe="wkwkwkwkw" data-asd="banana" onclick="show_form(this)">my 1st data</li>
+	<li data-qwe="ckckckckck" data-asd="apple" onclick="show_form(this)">my 2nd data</li>
+</ul>
+
+<hr/>
+
+<div id="mymodal" style="display: none;">
+	<h1>(modal)</h1>
+	<form id="myform" v-on:submit.prevent="do_submit">
+		<input name="qwe" v-model="$data.form.qwe"/>
+		<select name="asd" v-model="$data.form.asd">
+			<option value>-- choose --</option>
+			<option>banana</option>
+			<option>apple</option>
+			<option>dragon</option>
+			<option>watermelon</option>
+		</select>
+		<textarea name="zxc" v-model="$data.form.zxc"></textarea>
+
+		<button type="submit">submit</button>
+	</form>
+</div>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
+<script>
+Vue.config.devtools = false;
+Vue.config.productionTip = false;
+
+var mymodal = document.getElementById('mymodal');
+function show_form(elm) {
+	mymodal.style.display = 'block';
+	myform.do_refresh();
+
+	if (elm === null) {} else {
+		for (var d in elm.dataset) {
+			myform.do_bind_item(d, elm.dataset[d]);
+		}
+		// special
+		myform.$set(myform.$data.form, 'zxc', elm.innerText);
+	}
+}
+
+var myform = new Vue({
+	el: '#myform',
+	mounted: function() {
+		this.do_refresh();
+	},
+	data:{
+		form: {} // namespace
+	},
+	methods: {
+		do_refresh: function() {
+			for (var i = 0; i < this.$el.elements.length; i++) {
+				if (this.$el.elements[i].hasAttribute('name') === false) continue;
+
+				if (this.$el.elements[i].name === 'asd') {
+					this.$set(this.$data.form, this.$el.elements[i].name, '');
+				} else {
+					this.$set(this.$data.form, this.$el.elements[i].name, null);
+				}
+			}
+		},
+		do_bind_item: function(k,v) {
+			this.$set(this.$data.form, k, v);
+		},
+		do_submit: function() {
+			mymodal.style.display = 'none';
+			alert('submit');
+		}
+	}
+});
+</script>
+</body>
+</html>
